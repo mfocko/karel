@@ -10,16 +10,20 @@ class LepsiKarel(Karel):
         self.set_step_delay(before)
         self.turn_left()
 
+    def climb_stairs_and_pick_beepers(self):
+        while self.front_is_blocked():
+            self.turn_left()
+            while self.right_is_blocked():
+                self.movek()
+            self.turn_right()
+            self.movek()
+            while self.beepers_present():
+                self.pick_beeper()
+
 k = LepsiKarel("stairs3.kw")
 k.set_step_delay(delay)
 k.movek()
-while k.front_is_blocked():
-    k.turn_left()
-    while k.right_is_blocked(): k.movek()
-    k.turn_right()
-    k.movek()
-    while k.beepers_present():
-        k.pick_beeper()
+k.climb_stairs_and_pick_beepers()
 while k.beepers_in_bag():
     k.put_beeper()
 
