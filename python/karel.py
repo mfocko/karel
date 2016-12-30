@@ -1,8 +1,10 @@
-from curses import *
+import os
+import locale
 from time import sleep
 import sys
 import locale
-locale.setlocale(locale.LC_ALL, '')
+locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
+from curses import *
 
 class World:
     def __init__(self, width = 0, height = 0, data = []):
@@ -119,7 +121,7 @@ class Karel:
         if has_colors():
             self.__win.attron(color_pair(COLORS["WHITE"]))
             self.__win.attron(A_BOLD)
-        self.__win.addstr("{:^2}".format(n))
+        self.__win.addstr(u"{:^2}".format(n))
 
         if has_colors():
             self.__win.attroff(color_pair(COLORS["WHITE"]))
@@ -128,24 +130,24 @@ class Karel:
     def __draw_world(self):
         if self.__summary_mode: return
         self.__win.move(4, 0)
-        self.__win.addstr("ST.+")
+        self.__win.addstr(u"ST.+")
         column = 0
         while column <= self.__world.width * 2:
-            self.__win.addstr("-")
+            self.__win.addstr(u"-")
             column += 1
-        self.__win.addstr("+\n")
+        self.__win.addstr(u"+\n")
 
         row = self.__world.height - 1
         while row >= 0:
             if row % 2 == 0:
-                self.__win.addstr("{:2} |".format(row // 2 + 1))
+                self.__win.addstr(u"{:2} |".format(row // 2 + 1))
             else:
-                self.__win.addstr("   |")
+                self.__win.addstr(u"   |")
 
             if self.__world.data[row][0] == BLOCK["WALL"]:
-                self.__win.addstr("-")
+                self.__win.addstr(u"-")
             else:
-                self.__win.addstr(" ")
+                self.__win.addstr(u" ")
 
             for column in range(self.__world.width):
                 block = self.__world.data[row][column]
@@ -162,65 +164,65 @@ class Karel:
                     if block > 0:
                         self.__print_beeper(block)
                     else:
-                        self.__win.addstr('. ')
+                        self.__win.addstr(u'. ')
                     column += 1
                     continue
 
                 if block == BLOCK["WALL"]:
                     if column % 2 == 1 and row % 2 == 0:
-                        self.__win.addstr("| ")
+                        self.__win.addstr(u"| ")
                         continue
 
                     if up == BLOCK["WALL"] and down == BLOCK["WALL"] and left != BLOCK["WALL"] and right != BLOCK["WALL"]:
-                        self.__win.addstr("| ")
+                        self.__win.addstr(u"| ")
                         continue
 
                     if left == BLOCK["WALL"] and right != BLOCK["WALL"] and up != BLOCK["WALL"] and down != BLOCK["WALL"]:
-                        self.__win.addstr("- ")
+                        self.__win.addstr(u"- ")
                         continue
 
                     if up != BLOCK["WALL"] and down != BLOCK["WALL"]:
-                        self.__win.addstr("--")
+                        self.__win.addstr(u"--")
                         continue
 
                     if left != BLOCK["WALL"] and right == BLOCK["WALL"] and up != BLOCK["WALL"] and down != BLOCK["WALL"]:
-                        self.__win.addstr(" -")
+                        self.__win.addstr(u" -")
                         continue
 
                     if right == BLOCK["WALL"] and ( (up == BLOCK["WALL"] or down == BLOCK["WALL"]) or (up == BLOCK["WALL"] and left == BLOCK["WALL"]) or (up == BLOCK["WALL"] and down ==BLOCK["WALL"]) or (left == BLOCK["WALL"] and down ==BLOCK["WALL"]) ):
-                        self.__win.addstr("+-")
+                        self.__win.addstr(u"+-")
                         continue
 
                     if left != BLOCK["WALL"] and right != BLOCK["WALL"] and ((up != BLOCK["WALL"] and down == BLOCK["WALL"]) or (down != BLOCK["WALL"] and up == BLOCK["WALL"])):
-                        self.__win.addstr("| ")
+                        self.__win.addstr(u"| ")
                         continue
 
                     if left == BLOCK["WALL"] and right != BLOCK["WALL"] and (up == BLOCK["WALL"] or down == BLOCK["WALL"]):
-                        self.__win.addstr("+ ")
+                        self.__win.addstr(u"+ ")
                         continue
 
-                    self.__win.addstr("  ")
+                    self.__win.addstr(u"  ")
                 else:
-                    self.__win.addstr("  ")
+                    self.__win.addstr(u"  ")
 
-            self.__win.addstr("|\n")
+            self.__win.addstr(u"|\n")
             row -= 1
 
-        self.__win.addstr("   +")
+        self.__win.addstr(u"   +")
         column = 0
         while column <= self.__world.width * 2:
-            self.__win.addstr("-")
+            self.__win.addstr(u"-")
             column += 1
-        self.__win.addstr("+\n     ")
+        self.__win.addstr(u"+\n     ")
 
         column = 0
         while column < self.__world.width:
             if column % 2 == 0:
-                self.__win.addstr("{:>2}".format(column // 2 + 1))
+                self.__win.addstr(u"{:>2}".format(column // 2 + 1))
             else:
-                self.__win.addstr("  ")
+                self.__win.addstr(u"  ")
             column += 1
-        self.__win.addstr("  AVE.\n")
+        self.__win.addstr(u"  AVE.\n")
         self.__win.refresh()
 
     def __update(self, dx, dy):
@@ -232,7 +234,7 @@ class Karel:
                 if block > 0:
                     self.__print_beeper(block)
                 else:
-                    self.__win.addstr(". ")
+                    self.__win.addstr(u". ")
 
     def __render(self):
         if self.__summary_mode: return
@@ -245,9 +247,9 @@ class Karel:
         elif self.__direction == DIRECTION["EAST"]: direction = "EAST"
         else: direction = "UNKNOWN"
 
-        self.__win.addstr(" {:>3} {}\n".format(self.__steps, self.__last_command))
-        self.__win.addstr(" CORNER  FACING  BEEP-BAG  BEEP-CORNER\n")
-        self.__win.addstr(" ({}, {})   {:>5}     {:2}        {:2}".format((self.__x + 2) // 2, (self.__y + 2) // 2, direction, self.__beepers, self.__world.data[self.__y][self.__x]))
+        self.__win.addstr(u" {:>3} {}\n".format(self.__steps, self.__last_command))
+        self.__win.addstr(u" CORNER  FACING  BEEP-BAG  BEEP-CORNER\n")
+        self.__win.addstr(u" ({}, {})   {:>5}     {:2}        {:2}".format((self.__x + 2) // 2, (self.__y + 2) // 2, direction, self.__beepers, self.__world.data[self.__y][self.__x]))
 
         self.__win.move(self.__world.height - self.__y + 4, 2 * self.__x + 5)
 
@@ -255,10 +257,10 @@ class Karel:
             self.__win.attron(color_pair(COLORS["YELLOW"]))
             self.__win.attron(A_BOLD)
 
-        if self.__direction == DIRECTION["NORTH"]: self.__win.addstr("^ ")
-        elif self.__direction == DIRECTION["SOUTH"]: self.__win.addstr("v ")
-        elif self.__direction == DIRECTION["EAST"]: self.__win.addstr("> ")
-        elif self.__direction == DIRECTION["WEST"]: self.__win.addstr("< ")
+        if self.__direction == DIRECTION["NORTH"]: self.__win.addstr(u"^ ")
+        elif self.__direction == DIRECTION["SOUTH"]: self.__win.addstr(u"v ")
+        elif self.__direction == DIRECTION["EAST"]: self.__win.addstr(u"> ")
+        elif self.__direction == DIRECTION["WEST"]: self.__win.addstr(u"< ")
 
         if has_colors():
             self.__win.attroff(color_pair(COLORS["YELLOW"]))
@@ -271,7 +273,7 @@ class Karel:
             self.__win.move(0, 0)
             if has_colors():
                 self.__win.attron(color_pair(COLORS["RED"]))
-            self.__win.addstr("Error Shutoff! ({})".format(message))
+            self.__win.addstr(u"Error Shutoff! ({})".format(message))
             self.__win.refresh()
             self.__win.getch()
             endwin()
@@ -296,7 +298,7 @@ class Karel:
         self.__win.move(0, 0)
         if has_colors():
             self.__win.attron(color_pair(COLORS["YELLOW"]))
-        self.__win.addstr("Press any key to quit...")
+        self.__win.addstr(u"Press any key to quit...")
         self.__win.refresh()
         self.__win.getch()
         endwin()

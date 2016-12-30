@@ -1,6 +1,6 @@
 from karel import Karel
 import sys
-delay = 0.5
+delay = 0.2
 
 class LepsiKarel(Karel):
     def turn_right(self):
