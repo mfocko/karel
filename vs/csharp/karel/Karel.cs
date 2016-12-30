@@ -200,17 +200,17 @@ namespace sk.fockomatej.karel
                 for (int Column = 0; Column < World.Width; Column++)
                 {
                     int Block = World.Data[Row, Column];
-                    int Left = (Column - 1 >= 0) ? World.Data[Row, Column - 1] : (int)BLOCK.WALL;
-                    int Right = (Column + 1 < World.Width) ? World.Data[Row, Column + 1] : (int)BLOCK.WALL;
-                    int Up = (Row + 1 < World.Height) ? World.Data[Row + 1, Column] : 0;
-                    int Down = (Row - 1 >= 0) ? World.Data[Row - 1, Column] : 0;
-
                     if (Column % 2 == 0 && Row % 2 == 0)
                     {
                         if (Block > 0) PrintBeeper(Block);
                         else Console.Write(". ");
                         continue;
                     }
+
+                    int Left = (Column - 1 >= 0) ? World.Data[Row, Column - 1] : (int)BLOCK.WALL;
+                    int Right = (Column + 1 < World.Width) ? World.Data[Row, Column + 1] : (int)BLOCK.WALL;
+                    int Up = (Row + 1 < World.Height) ? World.Data[Row + 1, Column] : 0;
+                    int Down = (Row - 1 >= 0) ? World.Data[Row - 1, Column] : 0;
                     if (Block == (int)BLOCK.WALL)
                     {
                         if (Column % 2 == 1 && Row % 2 == 0)
@@ -219,7 +219,7 @@ namespace sk.fockomatej.karel
                             continue;
                         }
 
-                        if ((Up == (int)BLOCK.WALL && Down == (int)BLOCK.WALL && Left != (int)BLOCK.WALL && Right != (int)BLOCK.WALL))
+                        if (Up == (int)BLOCK.WALL && Down == (int)BLOCK.WALL && Left != (int)BLOCK.WALL && Right != (int)BLOCK.WALL)
                         {
                             Console.Write("| ");
                             continue;
