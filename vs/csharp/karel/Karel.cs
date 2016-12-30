@@ -25,7 +25,7 @@ namespace sk.fockomatej.karel
     {
         public int Width;
         public int Height;
-        public int[][] Data;
+        public int[,] Data;
         public const int MAX_WIDTH = 30;
         public const int MAX_HEIGHT = 30;
     }
@@ -96,8 +96,7 @@ namespace sk.fockomatej.karel
                     break;
             }
 
-            World.Data = new int[World.Height][];
-            for (int Row = 0; Row < World.Height; Row++) World.Data[Row] = new int[World.Width];
+            World.Data = new int[World.Height, World.Width];
 
             for (int LineNr = 1; LineNr < Kw.Length; LineNr++)
             {
@@ -138,17 +137,17 @@ namespace sk.fockomatej.karel
                                     break;
                             }
 
-                            World.Data[Row][Column] = (int)BLOCK.WALL;
+                            World.Data[Row, Column] = (int)BLOCK.WALL;
 
                             if (Column % 2 == 1 && Row % 2 == 0)
                             {
-                                if (Row + 1 < World.Height) World.Data[Row + 1][Column] = (int)BLOCK.WALL;
-                                if (Row - 1 >= 0) World.Data[Row - 1][Column] = (int)BLOCK.WALL;
+                                if (Row + 1 < World.Height) World.Data[Row + 1, Column] = (int)BLOCK.WALL;
+                                if (Row - 1 >= 0) World.Data[Row - 1, Column] = (int)BLOCK.WALL;
                             }
                             else
                             {
-                                if (Column + 1 < World.Width) World.Data[Row][Column + 1] = (int)BLOCK.WALL;
-                                if (Column - 1 >= 0) World.Data[Row][Column - 1] = (int)BLOCK.WALL;
+                                if (Column + 1 < World.Width) World.Data[Row, Column + 1] = (int)BLOCK.WALL;
+                                if (Column - 1 >= 0) World.Data[Row, Column - 1] = (int)BLOCK.WALL;
                             }
                             break;
                         }
@@ -157,7 +156,7 @@ namespace sk.fockomatej.karel
                             int Column = int.Parse(Line[1]) * 2 - 2;
                             int Row = int.Parse(Line[2]) * 2 - 2;
                             int Count = int.Parse(Line[3]);
-                            World.Data[Row][Column] = Count;
+                            World.Data[Row, Column] = Count;
                             break;
                         }
                     default:
@@ -199,16 +198,16 @@ namespace sk.fockomatej.karel
                 if (Row % 2 == 0) Console.Write("{0,-2} |", Row / 2 + 1);
                 else Console.Write("   |");
 
-                if (World.Data[Row][0] == (int)BLOCK.WALL) Console.Write("-");
+                if (World.Data[Row, 0] == (int)BLOCK.WALL) Console.Write("-");
                 else Console.Write(" ");
 
                 for (int Column = 0; Column < World.Width; Column++)
                 {
-                    int Block = World.Data[Row][Column];
-                    int Left = (Column - 1 >= 0) ? World.Data[Row][Column - 1] : (int)BLOCK.WALL;
-                    int Right = (Column + 1 < World.Width) ? World.Data[Row][Column + 1] : (int)BLOCK.WALL;
-                    int Up = (Row + 1 < World.Height) ? World.Data[Row + 1][Column] : 0;
-                    int Down = (Row - 1 >= 0) ? World.Data[Row - 1][Column] : 0;
+                    int Block = World.Data[Row, Column];
+                    int Left = (Column - 1 >= 0) ? World.Data[Row, Column - 1] : (int)BLOCK.WALL;
+                    int Right = (Column + 1 < World.Width) ? World.Data[Row, Column + 1] : (int)BLOCK.WALL;
+                    int Up = (Row + 1 < World.Height) ? World.Data[Row + 1, Column] : 0;
+                    int Down = (Row - 1 >= 0) ? World.Data[Row - 1, Column] : 0;
 
                     if (Column % 2 == 0 && Row % 2 == 0)
                     {
@@ -351,7 +350,7 @@ namespace sk.fockomatej.karel
         {
             if (!(dx == 0 && dy == 0))
             {
-                int Block = World.Data[Y - 2 * dy][X - 2 * dx];
+                int Block = World.Data[Y - 2 * dy, X - 2 * dx];
 
                 Console.SetCursorPosition(2 * (X - 2 * dx) + 5, World.Height - (Y - 2 * dy) + 4);
                 if (Block > 0) PrintBeeper(Block);
@@ -415,16 +414,16 @@ namespace sk.fockomatej.karel
             switch (this.Direction)
             {
                 case DIRECTION.NORTH:
-                    if (Y + 1 >= World.Height || World.Data[Y + 1][X] == (int) BLOCK.WALL) return false;
+                    if (Y + 1 >= World.Height || World.Data[Y + 1, X] == (int) BLOCK.WALL) return false;
                     break;
                 case DIRECTION.SOUTH:
-                    if (Y - 1 < 1 || World.Data[Y - 1][X] == (int) BLOCK.WALL) return false;
+                    if (Y - 1 < 1 || World.Data[Y - 1, X] == (int) BLOCK.WALL) return false;
                     break;
                 case DIRECTION.WEST:
-                    if (X - 1 < 1 || World.Data[Y][X - 1] == (int) BLOCK.WALL) return false;
+                    if (X - 1 < 1 || World.Data[Y, X - 1] == (int) BLOCK.WALL) return false;
                     break;
                 case DIRECTION.EAST:
-                    if (X + 1 >= World.Width || World.Data[Y][X + 1] == (int) BLOCK.WALL) return false;
+                    if (X + 1 >= World.Width || World.Data[Y, X + 1] == (int) BLOCK.WALL) return false;
                     break;
             }
 
@@ -527,7 +526,7 @@ namespace sk.fockomatej.karel
         public bool BeepersPresent()
         {
             CheckKarelState();
-            return World.Data[Y][X] > 0;
+            return World.Data[Y, X] > 0;
         }
 
         public bool NoBeepersPresent()
@@ -601,7 +600,7 @@ namespace sk.fockomatej.karel
 
             if (Beepers > 0)
             {
-                World.Data[Y][X]++;
+                World.Data[Y, X]++;
                 Beepers--;
                 Steps++;
                 LastCommand = Commands[4];
@@ -617,9 +616,9 @@ namespace sk.fockomatej.karel
         {
             CheckKarelState();
 
-            if (World.Data[Y][X] > 0)
+            if (World.Data[Y, X] > 0)
             {
-                World.Data[Y][X]--;
+                World.Data[Y, X]--;
                 Beepers++;
                 Steps++;
                 LastCommand = Commands[5];
