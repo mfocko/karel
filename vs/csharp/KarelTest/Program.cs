@@ -1,5 +1,4 @@
-﻿using System;
-using sk.fockomatej.karel;
+﻿using sk.fockomatej.karel;
 
 namespace KarelTest
 {
