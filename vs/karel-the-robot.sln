@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25123.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "karel", "csharp\karel\karel.csproj", "{12CD72B4-4D5B-46FA-8BBE-6ECF1AAA3A2B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Karel", "csharp\Karel\Karel.csproj", "{12CD72B4-4D5B-46FA-8BBE-6ECF1AAA3A2B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KarelTest", "csharp\KarelTest\KarelTest.csproj", "{9A3ED6F5-409C-497E-AB4F-DA5FB70FEE50}"
 	ProjectSection(ProjectDependencies) = postProject

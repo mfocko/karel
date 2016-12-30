@@ -74,9 +74,9 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\karel\karel.csproj">
+    <ProjectReference Include="..\Karel\Karel.csproj">
       <Project>{12cd72b4-4d5b-46fa-8bbe-6ecf1aaa3a2b}</Project>
-      <Name>karel</Name>
+      <Name>Karel</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
