@@ -191,7 +191,7 @@ namespace sk.fockomatej.karel
 
             for (int Row = World.Height - 1; Row >= 0; Row--)
             {
-                if (Row % 2 == 0) Console.Write("{0,-2} |", Row / 2 + 1);
+                if (Row % 2 == 0) Console.Write("{0,2} |", Row / 2 + 1);
                 else Console.Write("   |");
 
                 if (World.Data[Row, 0] == (int)BLOCK.WALL) Console.Write("-");
@@ -285,10 +285,10 @@ namespace sk.fockomatej.karel
 
             for (int Column = 0; Column < World.Width; Column++)
             {
-                if (Column % 2 == 0) Console.Write("{0,2}", Column / 2 + 1);
+                if (Column % 2 == 0) Console.Write("{0,-2}", Column / 2 + 1);
                 else Console.Write("  ");
             }
-            Console.Write("  AVE.\n");
+            Console.Write("  AVE.");
         }
 
         private void Render()
@@ -317,7 +317,7 @@ namespace sk.fockomatej.karel
 
             Console.Write(" {0,3} {1,-10}\n", Steps, LastCommand);
             Console.Write(" CORNER  FACING  BEEP-BAG  BEEP-CORNER\n");
-            Console.Write(" ({0}, {1})   {2,5}     {3,-2}        {4,-2}\n", (X + 2) / 2, (Y + 2) / 2, DirectionOut, Beepers, World.Data[Y][X]);
+            Console.Write(" ({0}, {1})   {2,5}     {3,-2}        {4,-2}\n", (X + 2) / 2, (Y + 2) / 2, DirectionOut, Beepers, World.Data[Y, X]);
 
             Console.SetCursorPosition(2 * X + 5, World.Height - Y + 4);
             ConsoleColor DefaultColor = Console.ForegroundColor;
@@ -371,8 +371,8 @@ namespace sk.fockomatej.karel
             DefaultBackground = Console.BackgroundColor;
             Console.BackgroundColor = ConsoleColor.Black;
             Console.CursorVisible = false;
-            Console.SetWindowSize(Console.WindowWidth, World.Height + 8);
-            Console.SetBufferSize(Console.WindowWidth, World.Height + 8);
+            Console.SetWindowSize(2 * World.Width + 12, World.Height + 8);
+            Console.SetBufferSize(2 * World.Width + 12, World.Height + 8);
         }
 
         private void DeInit()
