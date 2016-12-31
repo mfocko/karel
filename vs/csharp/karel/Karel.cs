@@ -26,21 +26,21 @@ namespace sk.fockomatej.karel
         public const int MAX_HEIGHT = 30;
     }
 
-    public class Karel
+    public static class Karel
     {
-        private int X, Y;
-        private DIRECTION Direction;
-        private int Steps;
-        private int Beepers;
-        private bool IsRunning;
-        private string LastCommand;
-        private WORLD World;
-        private int _StepDelay;
+        private static int X, Y;
+        private static DIRECTION Direction;
+        private static int Steps;
+        private static int Beepers;
+        private static bool IsRunning;
+        private static string LastCommand;
+        private static WORLD World;
+        private static int _StepDelay;
         private static readonly string[] Commands =
             { "MOVE", "TURNLEFT", "TURNON", "TURNOFF", "PUTBEEPER", "PICKBEEPER" };
-        private ConsoleColor DefaultBackground;
+        private static ConsoleColor DefaultBackground;
 
-        public Karel(string path)
+        public static void TurnOn(string path)
         {
             string[] Kw = null;
             try
@@ -171,7 +171,7 @@ namespace sk.fockomatej.karel
             IsRunning = true;
         }
 
-        private void PrintBeeper(int n)
+        private static void PrintBeeper(int n)
         {
             ConsoleColor DefaultColor = Console.ForegroundColor;
             Console.ForegroundColor = ConsoleColor.White;
@@ -179,7 +179,7 @@ namespace sk.fockomatej.karel
             Console.ForegroundColor = DefaultColor;
         }
 
-        private void DrawWorld()
+        private static void DrawWorld()
         {
             Console.SetCursorPosition(0, 4);
             Console.Write("ST.+");
@@ -219,47 +219,48 @@ namespace sk.fockomatej.karel
                             continue;
                         }
 
-                        if (Up == (int)BLOCK.WALL && Down == (int)BLOCK.WALL && Left != (int)BLOCK.WALL && Right != (int)BLOCK.WALL)
+                        bool WallAbove = (Up == (int)BLOCK.WALL);
+                        bool WallBelow = (Down == (int)BLOCK.WALL);
+                        bool WallOnLeft = (Left == (int)BLOCK.WALL);
+                        bool WallOnRight = (Right == (int)BLOCK.WALL);
+
+                        if (WallAbove && WallBelow && !WallOnLeft && !WallOnRight)
                         {
                             Console.Write("| ");
                             continue;
                         }
 
-                        if (Left == (int)BLOCK.WALL && Right != (int)BLOCK.WALL && Up != (int)BLOCK.WALL && Down != (int)BLOCK.WALL)
+                        if (WallOnLeft && !WallOnRight && !WallAbove && !WallBelow)
                         {
                             Console.Write("- ");
                             continue;
                         }
 
-                        if (Up != (int)BLOCK.WALL && Down != (int)BLOCK.WALL)
+                        if (!WallAbove && !WallBelow)
                         {
                             Console.Write("--");
                             continue;
                         }
 
-                        if (Left != (int)BLOCK.WALL && Right == (int)BLOCK.WALL && Up != (int)BLOCK.WALL && Down != (int)BLOCK.WALL)
+                        if (!WallOnLeft && WallOnRight && !WallAbove && !WallBelow)
                         {
                             Console.Write(" -");
                             continue;
                         }
 
-                        if (Right == (int)BLOCK.WALL && ( (Up == (int)BLOCK.WALL || Down == (int)BLOCK.WALL)
-                                                          || (Up == (int)BLOCK.WALL && Left == (int)BLOCK.WALL)
-                                                          || (Up == (int)BLOCK.WALL && Down == (int)BLOCK.WALL)
-                                                          || (Left == (int)BLOCK.WALL && Down == (int)BLOCK.WALL) ))
+                        if (WallOnRight && ((WallAbove || WallBelow) || (WallAbove && WallOnLeft) || (WallAbove && WallBelow) || (WallOnLeft && WallBelow)))
                         {
                             Console.Write("+-");
                             continue;
                         }
 
-                        if (Left != (int)BLOCK.WALL && Right != (int)BLOCK.WALL &&
-                            ((Up != (int)BLOCK.WALL && Down == (int)BLOCK.WALL) || (Down != (int)BLOCK.WALL && Up == (int)BLOCK.WALL)))
+                        if (!WallOnLeft && !WallOnRight && ((!WallAbove && WallBelow) || (!WallBelow && WallAbove)))
                         {
                             Console.Write("| ");
                             continue;
                         }
 
-                        if (Left == (int)BLOCK.WALL && Right != (int)BLOCK.WALL && (Up == (int)BLOCK.WALL || Down == (int)BLOCK.WALL))
+                        if (WallOnLeft && !WallOnRight && (WallAbove || WallBelow))
                         {
                             Console.Write("+ ");
                             continue;
@@ -291,7 +292,7 @@ namespace sk.fockomatej.karel
             Console.Write("  AVE.");
         }
 
-        private void Render()
+        private static void Render()
         {
             string DirectionOut;
             Console.SetCursorPosition(0, 1);
@@ -342,7 +343,7 @@ namespace sk.fockomatej.karel
             Thread.Sleep(StepDelay);
         }
 
-        private void Update(int dx, int dy)
+        private static void Update(int dx, int dy)
         {
             if (!(dx == 0 && dy == 0))
             {
@@ -354,7 +355,7 @@ namespace sk.fockomatej.karel
             }
         }
 
-        private void ErrorShutOff(string message)
+        private static void ErrorShutOff(string message)
         {
             Console.SetCursorPosition(0, 0);
             ConsoleColor DefaultColor = Console.ForegroundColor;
@@ -366,7 +367,7 @@ namespace sk.fockomatej.karel
             Environment.Exit(1);
         }
 
-        private void Init()
+        private static void Init()
         {
             DefaultBackground = Console.BackgroundColor;
             Console.BackgroundColor = ConsoleColor.Black;
@@ -375,7 +376,7 @@ namespace sk.fockomatej.karel
             Console.SetBufferSize(2 * World.Width + 12, World.Height + 8);
         }
 
-        private void DeInit()
+        private static void DeInit()
         {
             Console.SetCursorPosition(0, 0);
             ConsoleColor DefaultColor = Console.ForegroundColor;
@@ -387,51 +388,51 @@ namespace sk.fockomatej.karel
             Environment.Exit(0);
         }
 
-        private void CheckKarelState()
+        private static void CheckKarelState()
         {
             if (!IsRunning) ErrorShutOff("Karel is not turned on");
         }
 
-        public bool BeepersInBag()
+        public static bool BeepersInBag()
         {
             CheckKarelState();
             return Beepers > 0;
         }
 
-        public bool NoBeepersInBag()
+        public static bool NoBeepersInBag()
         {
             return !BeepersInBag();
         }
 
-        public bool FrontIsClear()
+        public static bool FrontIsClear()
         {
             CheckKarelState();
 
-            switch (this.Direction)
+            switch (Direction)
             {
                 case DIRECTION.NORTH:
-                    if (Y + 1 >= World.Height || World.Data[Y + 1, X] == (int) BLOCK.WALL) return false;
+                    if (Y + 1 >= World.Height || World.Data[Y + 1, X] == (int)BLOCK.WALL) return false;
                     break;
                 case DIRECTION.SOUTH:
-                    if (Y - 1 < 1 || World.Data[Y - 1, X] == (int) BLOCK.WALL) return false;
+                    if (Y - 1 < 1 || World.Data[Y - 1, X] == (int)BLOCK.WALL) return false;
                     break;
                 case DIRECTION.WEST:
-                    if (X - 1 < 1 || World.Data[Y, X - 1] == (int) BLOCK.WALL) return false;
+                    if (X - 1 < 1 || World.Data[Y, X - 1] == (int)BLOCK.WALL) return false;
                     break;
                 case DIRECTION.EAST:
-                    if (X + 1 >= World.Width || World.Data[Y, X + 1] == (int) BLOCK.WALL) return false;
+                    if (X + 1 >= World.Width || World.Data[Y, X + 1] == (int)BLOCK.WALL) return false;
                     break;
             }
 
             return true;
         }
 
-        public bool FrontIsBlocked()
+        public static bool FrontIsBlocked()
         {
             return !FrontIsClear();
         }
 
-        public bool LeftIsClear()
+        public static bool LeftIsClear()
         {
             CheckKarelState();
 
@@ -448,16 +449,16 @@ namespace sk.fockomatej.karel
             return IsClear;
         }
 
-        public bool LeftIsBlocked()
+        public static bool LeftIsBlocked()
         {
             return !LeftIsClear();
         }
 
-        public bool RightIsClear()
+        public static bool RightIsClear()
         {
             CheckKarelState();
 
-            DIRECTION OriginalDirection = this.Direction;
+            DIRECTION OriginalDirection = Direction;
             Direction -= 90;
             if (Direction < DIRECTION.EAST)
             {
@@ -470,89 +471,89 @@ namespace sk.fockomatej.karel
             return IsClear;
         }
 
-        public bool RightIsBlocked()
+        public static bool RightIsBlocked()
         {
             return !RightIsClear();
         }
 
-        public bool FacingNorth()
+        public static bool FacingNorth()
         {
             CheckKarelState();
             return Direction == DIRECTION.NORTH;
         }
 
-        public bool NotFacingNorth()
+        public static bool NotFacingNorth()
         {
             return !FacingNorth();
         }
 
-        public bool FacingSouth()
+        public static bool FacingSouth()
         {
             CheckKarelState();
             return Direction == DIRECTION.SOUTH;
         }
 
-        public bool NotFacingSouth()
+        public static bool NotFacingSouth()
         {
             return !FacingSouth();
         }
 
-        public bool FacingEast()
+        public static bool FacingEast()
         {
             CheckKarelState();
             return Direction == DIRECTION.EAST;
         }
 
-        public bool NotFacingEast()
+        public static bool NotFacingEast()
         {
             return !FacingEast();
         }
 
-        public bool FacingWest()
+        public static bool FacingWest()
         {
             CheckKarelState();
             return Direction == DIRECTION.WEST;
         }
 
-        public bool NotFacingWest()
+        public static bool NotFacingWest()
         {
             return !FacingWest();
         }
 
-        public bool BeepersPresent()
+        public static bool BeepersPresent()
         {
             CheckKarelState();
             return World.Data[Y, X] > 0;
         }
 
-        public bool NoBeepersPresent()
+        public static bool NoBeepersPresent()
         {
             return !BeepersPresent();
         }
 
-        public void Move()
+        public static void Move()
         {
             CheckKarelState();
 
             if (FrontIsClear())
             {
-                switch(Direction)
+                switch (Direction)
                 {
                     case DIRECTION.NORTH:
                         Y += 2;
-                        Update( 0,  1);
+                        Update(0, 1);
                         break;
                     case DIRECTION.SOUTH:
                         Y -= 2;
-                        Update( 0, -1);
+                        Update(0, -1);
                         break;
                     case DIRECTION.WEST:
                         X -= 2;
-                        Update(-1,  0);
+                        Update(-1, 0);
                         break;
                     case DIRECTION.EAST:
                         X += 2;
-                        Update( 1,  0);
+                        Update(1, 0);
                         break;
                 }
                 Steps++;
@@ -565,12 +566,12 @@ namespace sk.fockomatej.karel
             }
         }
 
-        public void TurnLeft()
+        public static void TurnLeft()
         {
             CheckKarelState();
 
             Direction += 90;
-            if ((int) Direction > 270)
+            if ((int)Direction > 270)
             {
                 Direction = DIRECTION.EAST;
             }
@@ -581,7 +582,7 @@ namespace sk.fockomatej.karel
             Render();
         }
 
-        public void TurnOff()
+        public static void TurnOff()
         {
             LastCommand = Commands[3];
             Render();
@@ -590,7 +591,7 @@ namespace sk.fockomatej.karel
             Environment.Exit(0);
         }
 
-        public void PutBeeper()
+        public static void PutBeeper()
         {
             CheckKarelState();
 
@@ -608,7 +609,7 @@ namespace sk.fockomatej.karel
             }
         }
 
-        public void PickBeeper()
+        public static void PickBeeper()
         {
             CheckKarelState();
 
@@ -626,7 +627,7 @@ namespace sk.fockomatej.karel
             }
         }
 
-        public int StepDelay
+        public static int StepDelay
         {
             get { return _StepDelay; }
             set

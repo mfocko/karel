@@ -1,37 +1,37 @@
 ﻿Imports System.Threading
 
-Enum BLOCK
-    CLEAR = 0
-    WALL = -1
-End Enum
+Public Module Karel
+    Enum BLOCK
+        CLEAR = 0
+        WALL = -1
+    End Enum
 
-Enum DIRECTION
-    EAST = 0
-    NORTH = 90
-    WEST = 180
-    SOUTH = 270
-End Enum
+    Enum _DIRECTION
+        EAST = 0
+        NORTH = 90
+        WEST = 180
+        SOUTH = 270
+    End Enum
 
-Structure WORLD
-    Public Width As Integer
-    Public Height As Integer
-    Public Data As Integer(,)
-    Public Const MAX As Integer = 30
-End Structure
+    Structure _WORLD
+        Public Width As Integer
+        Public Height As Integer
+        Public Data As Integer(,)
+        Public Const MAX As Integer = 30
+    End Structure
 
-Public Class Karel
     Private X, Y As Integer
-    Private Direction As DIRECTION
+    Private Direction As _DIRECTION
     Private Steps As Integer
     Private Beepers As Integer
     Private IsRunning As Boolean
     Private LastCommand As String
-    Private World As WORLD
+    Private World As _WORLD
     Private _StepDelay As Integer
-    Private Shared ReadOnly Commands() As String = {"MOVE", "TURNLEFT", "TURNON", "TURNOFF", "PUTBEEPER", "PICKBEEPER"}
+    Private ReadOnly Commands() As String = {"MOVE", "TURNLEFT", "TURNON", "TURNOFF", "PUTBEEPER", "PICKBEEPER"}
     Private DefaultBackground As ConsoleColor
 
-    Public Sub New(ByVal path As String)
+    Public Sub TurnOn(ByVal path As String)
         Dim Kw() As String = Nothing
         Try
             Kw = IO.File.ReadAllLines(path)
@@ -53,20 +53,20 @@ Public Class Karel
         X = X * 2 - 2
         Y = Y * 2 - 2
 
-        If World.Width > WORLD.MAX OrElse World.Height > WORLD.MAX Then
-            Console.Error.Write("The given world is greater then the max values of [{0}x{1}]." + vbLf, WORLD.MAX, WORLD.MAX)
+        If World.Width > _WORLD.MAX OrElse World.Height > _WORLD.MAX Then
+            Console.Error.Write("The given world is greater then the max values of [{0}x{1}]." + vbLf, _WORLD.MAX, _WORLD.MAX)
             Environment.Exit(1)
         End If
 
         Select Case LocalDirection
             Case "S"
-                Direction = DIRECTION.SOUTH
+                Direction = _DIRECTION.SOUTH
             Case "W"
-                Direction = DIRECTION.WEST
+                Direction = _DIRECTION.WEST
             Case "E"
-                Direction = DIRECTION.EAST
+                Direction = _DIRECTION.EAST
             Case "N"
-                Direction = DIRECTION.NORTH
+                Direction = _DIRECTION.NORTH
             Case Else
                 Console.Error.Write("Error: Unknown Karel's direction." + vbLf)
                 Environment.Exit(1)
@@ -177,41 +177,43 @@ Public Class Karel
                         Continue For
                     End If
 
-                    If (Up = BLOCK.WALL) AndAlso (Down = BLOCK.WALL) AndAlso (Left <> BLOCK.WALL) AndAlso (Right <> BLOCK.WALL) Then
+                    Dim WallAbove As Boolean = (Up = BLOCK.WALL)
+                    Dim WallBelow As Boolean = (Down = BLOCK.WALL)
+                    Dim WallOnLeft As Boolean = (Left = BLOCK.WALL)
+                    Dim WallOnRight As Boolean = (Right = BLOCK.WALL)
+
+                    If (WallAbove) AndAlso (WallBelow) AndAlso (Not WallOnLeft) AndAlso (Not WallOnRight) Then
                         Console.Write("| ")
                         Continue For
                     End If
 
-                    If (Left = BLOCK.WALL) AndAlso (Right <> BLOCK.WALL) AndAlso (Up <> BLOCK.WALL) AndAlso (Down <> BLOCK.WALL) Then
+                    If (WallOnLeft) AndAlso (Not WallOnRight) AndAlso (Not WallAbove) AndAlso (Not WallBelow) Then
                         Console.Write("- ")
                         Continue For
                     End If
 
-                    If (Up <> BLOCK.WALL) AndAlso (Down <> BLOCK.WALL) Then
+                    If (Not WallAbove) AndAlso (Not WallBelow) Then
                         Console.Write("--")
                         Continue For
                     End If
 
-                    If (Left <> BLOCK.WALL) AndAlso (Right = BLOCK.WALL) AndAlso (Up <> BLOCK.WALL) AndAlso (Down <> BLOCK.WALL) Then
+                    If (Not WallOnLeft) AndAlso (WallOnRight) AndAlso (Not WallAbove) AndAlso (Not WallBelow) Then
                         Console.Write(" -")
                         Continue For
                     End If
 
-                    If (Right = BLOCK.WALL) AndAlso (((Up = BLOCK.WALL) OrElse (Down = BLOCK.WALL)) _
-                                                        OrElse ((Up = BLOCK.WALL) AndAlso (Left = BLOCK.WALL)) _
-                                                        OrElse ((Up = BLOCK.WALL) AndAlso (Down = BLOCK.WALL)) _
-                                                        OrElse ((Left = BLOCK.WALL) AndAlso (Down = BLOCK.WALL))) Then
+                    If (WallOnRight) AndAlso (((WallAbove) OrElse (WallBelow)) OrElse ((WallAbove) AndAlso (WallOnLeft)) OrElse ((WallAbove) AndAlso (WallBelow)) OrElse ((WallOnLeft) AndAlso (WallBelow))) Then
                         Console.Write("+-")
                         Continue For
                     End If
 
-                    If (Left <> BLOCK.WALL) AndAlso (Right <> BLOCK.WALL) AndAlso
-                            (((Up <> BLOCK.WALL) AndAlso (Down = BLOCK.WALL)) OrElse ((Down <> BLOCK.WALL) AndAlso (Up = BLOCK.WALL))) Then
+                    If (Not WallOnLeft) AndAlso (Not WallOnRight) AndAlso
+                        (((Not WallAbove) AndAlso (WallBelow)) OrElse ((Not WallBelow) AndAlso (WallAbove))) Then
                         Console.Write("| ")
                         Continue For
                     End If
 
-                    If (Left = BLOCK.WALL) AndAlso (Right <> BLOCK.WALL) AndAlso ((Up = BLOCK.WALL) OrElse (Down = BLOCK.WALL)) Then
+                    If (WallOnLeft) AndAlso (Not WallOnRight) AndAlso ((WallAbove) OrElse (WallBelow)) Then
                         Console.Write("+ ")
                         Continue For
                     End If
@@ -245,13 +247,13 @@ Public Class Karel
         Console.SetCursorPosition(0, 1)
 
         Select Case Direction
-            Case DIRECTION.NORTH
+            Case _DIRECTION.NORTH
                 DirectionOut = "NORTH"
-            Case DIRECTION.SOUTH
+            Case _DIRECTION.SOUTH
                 DirectionOut = "SOUTH"
-            Case DIRECTION.WEST
+            Case _DIRECTION.WEST
                 DirectionOut = "WEST"
-            Case DIRECTION.EAST
+            Case _DIRECTION.EAST
                 DirectionOut = "EAST"
             Case Else
                 DirectionOut = "UNKNOWN"
@@ -265,13 +267,13 @@ Public Class Karel
         Dim DefaultColor As ConsoleColor = Console.ForegroundColor
         Console.ForegroundColor = ConsoleColor.Yellow
         Select Case Direction
-            Case DIRECTION.NORTH
+            Case _DIRECTION.NORTH
                 Console.Write("^ ")
-            Case DIRECTION.SOUTH
+            Case _DIRECTION.SOUTH
                 Console.Write("v ")
-            Case DIRECTION.EAST
+            Case _DIRECTION.EAST
                 Console.Write("> ")
-            Case DIRECTION.WEST
+            Case _DIRECTION.WEST
                 Console.Write("< ")
         End Select
         Console.ForegroundColor = DefaultColor
@@ -340,13 +342,13 @@ Public Class Karel
         CheckKarelState()
 
         Select Case Direction
-            Case DIRECTION.NORTH
+            Case _DIRECTION.NORTH
                 If (Y + 1 >= World.Height) OrElse (World.Data(Y + 1, X) = BLOCK.WALL) Then Return False
-            Case DIRECTION.SOUTH
+            Case _DIRECTION.SOUTH
                 If (Y - 1 < 1) OrElse (World.Data(Y - 1, X) = BLOCK.WALL) Then Return False
-            Case DIRECTION.WEST
+            Case _DIRECTION.WEST
                 If (X - 1 < 1) OrElse (World.Data(Y, X - 1) = BLOCK.WALL) Then Return False
-            Case DIRECTION.EAST
+            Case _DIRECTION.EAST
                 If (X + 1 >= World.Width) OrElse (World.Data(Y, X + 1) = BLOCK.WALL) Then Return False
         End Select
         Return True
@@ -359,10 +361,10 @@ Public Class Karel
     Public Function LeftIsClear() As Boolean
         CheckKarelState()
 
-        Dim OriginalDirection As DIRECTION = Direction
+        Dim OriginalDirection As _DIRECTION = Direction
         Direction += 90
-        If Direction > DIRECTION.SOUTH Then
-            Direction = DIRECTION.EAST
+        If Direction > _DIRECTION.SOUTH Then
+            Direction = _DIRECTION.EAST
         End If
 
         Dim IsClear As Boolean = FrontIsClear()
@@ -378,10 +380,10 @@ Public Class Karel
     Public Function RightIsClear() As Boolean
         CheckKarelState()
 
-        Dim OriginalDirection As DIRECTION = Direction
+        Dim OriginalDirection As _DIRECTION = Direction
         Direction -= 90
-        If Direction < DIRECTION.EAST Then
-            Direction = DIRECTION.SOUTH
+        If Direction < _DIRECTION.EAST Then
+            Direction = _DIRECTION.SOUTH
         End If
 
         Dim IsClear As Boolean = FrontIsClear()
@@ -396,7 +398,7 @@ Public Class Karel
 
     Public Function FacingNorth() As Boolean
         CheckKarelState()
-        Return Direction = DIRECTION.NORTH
+        Return Direction = _DIRECTION.NORTH
     End Function
 
     Public Function NotFacingNorth() As Boolean
@@ -405,7 +407,7 @@ Public Class Karel
 
     Public Function FacingSouth() As Boolean
         CheckKarelState()
-        Return Direction = DIRECTION.SOUTH
+        Return Direction = _DIRECTION.SOUTH
     End Function
 
     Public Function NotFacingSouth() As Boolean
@@ -414,7 +416,7 @@ Public Class Karel
 
     Public Function FacingEast() As Boolean
         CheckKarelState()
-        Return Direction = DIRECTION.EAST
+        Return Direction = _DIRECTION.EAST
     End Function
 
     Public Function NotFacingEast() As Boolean
@@ -423,7 +425,7 @@ Public Class Karel
 
     Public Function FacingWest() As Boolean
         CheckKarelState()
-        Return Direction = DIRECTION.WEST
+        Return Direction = _DIRECTION.WEST
     End Function
 
     Public Function NotFacingWest() As Boolean
@@ -444,16 +446,16 @@ Public Class Karel
 
         If FrontIsClear() Then
             Select Case Direction
-                Case DIRECTION.NORTH
+                Case _DIRECTION.NORTH
                     Y += 2
                     Update(0, 1)
-                Case DIRECTION.SOUTH
+                Case _DIRECTION.SOUTH
                     Y -= 2
                     Update(0, -1)
-                Case DIRECTION.WEST
+                Case _DIRECTION.WEST
                     X -= 2
                     Update(-1, 0)
-                Case DIRECTION.EAST
+                Case _DIRECTION.EAST
                     X += 2
                     Update(1, 0)
             End Select
@@ -469,8 +471,8 @@ Public Class Karel
         CheckKarelState()
 
         Direction += 90
-        If Direction > DIRECTION.SOUTH Then
-            Direction = DIRECTION.EAST
+        If Direction > _DIRECTION.SOUTH Then
+            Direction = _DIRECTION.EAST
         End If
         Steps += 1
         LastCommand = Commands(1)
@@ -524,4 +526,4 @@ Public Class Karel
             _StepDelay = value
         End Set
     End Property
-End Class
+End Module

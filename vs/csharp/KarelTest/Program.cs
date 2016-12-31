@@ -1,21 +1,21 @@
-﻿using sk.fockomatej.karel;
+﻿using static sk.fockomatej.karel.Karel;
 
 namespace KarelTest
 {
-    class KarelReloaded : Karel
+    class Program
     {
-        public KarelReloaded(string path) : base(path) {}
+        private static int DELAY = 200;
 
-        public void TurnRight()
+        public static void TurnRight()
         {
-            int PreviousDelay = this.StepDelay;
+            int PreviousDelay = StepDelay;
             StepDelay = 0;
             for (int i = 0; i < 2; i++) TurnLeft();
             StepDelay = PreviousDelay;
             TurnLeft();
         }
 
-        public void ClimbStairsAndPickBeepers()
+        public static void ClimbStairsAndPickBeepers()
         {
             while (FrontIsBlocked())
             {
@@ -32,25 +32,20 @@ namespace KarelTest
                 }
             }
         }
-    }
-
-    class Program
-    {
-        private static int DELAY = 200;
         
         static void Main(string[] args)
         {
-            KarelReloaded k = new KarelReloaded("stairs3.kw");
+            TurnOn("stairs3.kw");
 
-            k.StepDelay = DELAY;
-            k.Move();
-            k.ClimbStairsAndPickBeepers();
-            while (k.BeepersInBag())
+            StepDelay = DELAY;
+            Move();
+            ClimbStairsAndPickBeepers();
+            while (BeepersInBag())
             {
-                k.PutBeeper();
+                PutBeeper();
             }
 
-            k.TurnOff();
+            TurnOff();
         }
     }
 }

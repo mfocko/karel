@@ -12,462 +12,472 @@ class World:
         self.height = height
         self.data = data
 
+class Karel:
+    def __init__(self):
+        self.x = 0
+        self.y = 0
+        self.direction = None
+        self.steps = 0
+        self.beepers = 0
+        self.last_command = None
+        self.step_delay = 1
+        self.world = World()
+        self.win = None
+        self.summary_mode = False
+        self.is_running = None
+
 BLOCK = {"CLEAR": 0, "WALL": -1}
 DIRECTION = {"EAST": 0, "NORTH": 90, "WEST": 180, "SOUTH": 270}
 COLORS = {"RED": 1, "YELLOW": 2, "WHITE": 3}
-class Karel:
-    def __init__(self, filename = None):
-        world_content = None
-        try:
-            world_file = open(filename)
-            world_content = world_file.read()
-            world_file.close()
-        except OSError:
-            print("Error: World file '{}' not found.".format(filename))
-            exit(1)
-        world_content = world_content.split('\n')
-        world_content[0] = world_content[0].split(' ')
 
-        self.__x = 0
-        self.__y = 0
-        self.__direction = DIRECTION["EAST"]
-        self.__steps = 0
-        self.__beepers = 0
-        self.__last_command = "none"
-        self.__step_delay = 1
-        self.__world = World()
-        self.__win = None
-        self.__summary_mode = False
+__k = Karel()
 
-        self.__world.width = int(world_content[0][0])
-        self.__world.height = int(world_content[0][1])
-        self.__x = int(world_content[0][2])
-        self.__y = int(world_content[0][3])
-        self.__direction = world_content[0][4].upper()
-        self.__beepers = int(world_content[0][5])
+def TurnOn(filename = None):
+    world_content = None
+    try:
+        world_file = open(filename)
+        world_content = world_file.read()
+        world_file.close()
+    except OSError:
+        print("Error: World file '{}' not found.".format(filename))
+        exit(1)
+    world_content = world_content.split('\n')
+    world_content[0] = world_content[0].split(' ')
 
-        self.__world.data = []
-        self.__world.width = self.__world.width * 2 - 1
-        self.__world.height = self.__world.height * 2 - 1
-        self.__x = self.__x * 2 - 2
-        self.__y = self.__y * 2 - 2
+    __k.world.width = int(world_content[0][0])
+    __k.world.height = int(world_content[0][1])
+    __k.x = int(world_content[0][2])
+    __k.y = int(world_content[0][3])
+    __k.direction = world_content[0][4].upper()
+    __k.beepers = int(world_content[0][5])
 
-        for i in range(self.__world.height):
-            self.__world.data.append([])
-            for j in range(self.__world.width):
-                self.__world.data[i].append(0)
+    __k.world.data = []
+    __k.world.width = __k.world.width * 2 - 1
+    __k.world.height = __k.world.height * 2 - 1
+    __k.x = __k.x * 2 - 2
+    __k.y = __k.y * 2 - 2
 
-        if self.__world.width > 30 or self.__world.height > 30:
-            print("The given world is greater than the max values of [{}x{}]".format(30, 30), file=sys.stderr)
-            exit(1)
+    for i in range(__k.world.height):
+        __k.world.data.append([])
+        for j in range(__k.world.width):
+            __k.world.data[i].append(0)
 
-        if self.__direction == "S": self.__direction = DIRECTION["SOUTH"]
-        elif self.__direction == "W": self.__direction = DIRECTION["WEST"]
-        elif self.__direction == "E": self.__direction = DIRECTION["EAST"]
-        elif self.__direction == "N": self.__direction = DIRECTION["NORTH"]
-        else:
-            print("Error: Unknown Karel's direction\n", file=sys.stderr)
-            exit(1)
-
-        for i in range(1, len(world_content)):
-            if world_content[i] == '': continue
-            world_content[i] = world_content[i].split(' ')
-            block = world_content[i][0].upper()
-            if block == "W":
-                column = int(world_content[i][1]) * 2 - 2
-                row = int(world_content[i][2]) * 2 - 2
-
-                if column % 2 == 1 or row % 2 == 1:
-                    print("Error: Wrong position", file=sys.stderr)
-                    exit(1)
-
-                orientation = world_content[i][3].upper()
-                if orientation == "E": column += 1
-                elif orientation == "W": column -= 1
-                elif orientation == "N": row += 1
-                elif orientation == "S": row -= 1
-                else:
-                    print("Error: Unknown wall orientation '" + orientation + "' on line " + str(i + 1) + " in world file.", file=sys.stderr)
-                    exit(1)
-                self.__world.data[row][column] = BLOCK["WALL"]
-                if column % 2 == 1 and row % 2 == 0:
-                    if row + 1 < self.__world.height:
-                        self.__world.data[row + 1][column] = BLOCK["WALL"]
-                    if row - 1 >= 0:
-                        self.__world.data[row - 1][column] = BLOCK["WALL"]
-                else:
-                    if column + 1 < self.__world.width:
-                        self.__world.data[row][column + 1] = BLOCK["WALL"]
-                    if column - 1 >= 0:
-                        self.__world.data[row][column - 1] = BLOCK["WALL"]
-            elif block == "B":
-                column = int(world_content[i][1]) * 2 - 2
-                row = int(world_content[i][2]) * 2 - 2
-                count = int(world_content[i][3])
-                self.__world.data[row][column] = count
-            else:
-                print("Unknown block character " + block + " on line " + str(i + 1) + " in world file.")
-                exit(1)
-        self.__init()
-        self.__last_command = "TURNON"
-        self.__draw_world()
-        self.__render()
-
-        self.__is_running = True
-
-
-    def __print_beeper(self, n):
-        if self.__summary_mode: return
-        if has_colors():
-            self.__win.attron(color_pair(COLORS["WHITE"]))
-            self.__win.attron(A_BOLD)
-        self.__win.addstr(u"{:^2}".format(n))
-
-        if has_colors():
-            self.__win.attroff(color_pair(COLORS["WHITE"]))
-            self.__win.attroff(A_BOLD)
-
-    def __draw_world(self):
-        if self.__summary_mode: return
-        self.__win.move(4, 0)
-        self.__win.addstr(u"ST.+")
-        column = 0
-        while column <= self.__world.width * 2:
-            self.__win.addstr(u"-")
-            column += 1
-        self.__win.addstr(u"+\n")
-
-        row = self.__world.height - 1
-        while row >= 0:
-            if row % 2 == 0:
-                self.__win.addstr(u"{:2} |".format(row // 2 + 1))
-            else:
-                self.__win.addstr(u"   |")
-
-            if self.__world.data[row][0] == BLOCK["WALL"]:
-                self.__win.addstr(u"-")
-            else:
-                self.__win.addstr(u" ")
-
-            for column in range(self.__world.width):
-                block = self.__world.data[row][column]
-                left = BLOCK["WALL"]
-                right = BLOCK["WALL"]
-                up = 0
-                down = 0
-                if column - 1 >= 0: left = self.__world.data[row][column - 1]
-                if column + 1 < self.__world.width: right = self.__world.data[row][column + 1]
-                if row + 1 < self.__world.height: up = self.__world.data[row + 1][column]
-                if row - 1 >= 0: down = self.__world.data[row - 1][column]
-
-                if column % 2 == 0 and row % 2 == 0:
-                    if block > 0:
-                        self.__print_beeper(block)
-                    else:
-                        self.__win.addstr(u'. ')
-                    column += 1
-                    continue
-
-                if block == BLOCK["WALL"]:
-                    if column % 2 == 1 and row % 2 == 0:
-                        self.__win.addstr(u"| ")
-                        continue
-
-                    if up == BLOCK["WALL"] and down == BLOCK["WALL"] and left != BLOCK["WALL"] and right != BLOCK["WALL"]:
-                        self.__win.addstr(u"| ")
-                        continue
-
-                    if left == BLOCK["WALL"] and right != BLOCK["WALL"] and up != BLOCK["WALL"] and down != BLOCK["WALL"]:
-                        self.__win.addstr(u"- ")
-                        continue
-
-                    if up != BLOCK["WALL"] and down != BLOCK["WALL"]:
-                        self.__win.addstr(u"--")
-                        continue
-
-                    if left != BLOCK["WALL"] and right == BLOCK["WALL"] and up != BLOCK["WALL"] and down != BLOCK["WALL"]:
-                        self.__win.addstr(u" -")
-                        continue
-
-                    if right == BLOCK["WALL"] and ( (up == BLOCK["WALL"] or down == BLOCK["WALL"]) or (up == BLOCK["WALL"] and left == BLOCK["WALL"]) or (up == BLOCK["WALL"] and down ==BLOCK["WALL"]) or (left == BLOCK["WALL"] and down ==BLOCK["WALL"]) ):
-                        self.__win.addstr(u"+-")
-                        continue
-
-                    if left != BLOCK["WALL"] and right != BLOCK["WALL"] and ((up != BLOCK["WALL"] and down == BLOCK["WALL"]) or (down != BLOCK["WALL"] and up == BLOCK["WALL"])):
-                        self.__win.addstr(u"| ")
-                        continue
-
-                    if left == BLOCK["WALL"] and right != BLOCK["WALL"] and (up == BLOCK["WALL"] or down == BLOCK["WALL"]):
-                        self.__win.addstr(u"+ ")
-                        continue
-
-                    self.__win.addstr(u"  ")
-                else:
-                    self.__win.addstr(u"  ")
-
-            self.__win.addstr(u"|\n")
-            row -= 1
-
-        self.__win.addstr(u"   +")
-        column = 0
-        while column <= self.__world.width * 2:
-            self.__win.addstr(u"-")
-            column += 1
-        self.__win.addstr(u"+\n     ")
-
-        column = 0
-        while column < self.__world.width:
-            if column % 2 == 0:
-                self.__win.addstr(u"{:>2}".format(column // 2 + 1))
-            else:
-                self.__win.addstr(u"  ")
-            column += 1
-        self.__win.addstr(u"  AVE.\n")
-        self.__win.refresh()
-
-    def __update(self, dx, dy):
-        if not (dx == 0 and dy == 0):
-            block = self.__world.data[self.__y - 2 * dy][self.__x - 2 * dx]
-
-            if not self.__summary_mode:
-                self.__win.move(self.__world.height - (self.__y - 2 * dy) + 4, 2 * (self.__x - 2 * dx) + 5)
-                if block > 0:
-                    self.__print_beeper(block)
-                else:
-                    self.__win.addstr(u". ")
-
-    def __render(self):
-        if self.__summary_mode: return
-        direction = None
-        self.__win.move(1, 0)
-
-        if self.__direction == DIRECTION["NORTH"]: direction = "NORTH"
-        elif self.__direction == DIRECTION["SOUTH"]: direction = "SOUTH"
-        elif self.__direction == DIRECTION["WEST"]: direction = "WEST"
-        elif self.__direction == DIRECTION["EAST"]: direction = "EAST"
-        else: direction = "UNKNOWN"
-
-        self.__win.addstr(u" {:>3} {}\n".format(self.__steps, self.__last_command))
-        self.__win.addstr(u" CORNER  FACING  BEEP-BAG  BEEP-CORNER\n")
-        self.__win.addstr(u" ({}, {})   {:>5}     {:2}        {:2}".format((self.__x + 2) // 2, (self.__y + 2) // 2, direction, self.__beepers, self.__world.data[self.__y][self.__x]))
-
-        self.__win.move(self.__world.height - self.__y + 4, 2 * self.__x + 5)
-
-        if has_colors():
-            self.__win.attron(color_pair(COLORS["YELLOW"]))
-            self.__win.attron(A_BOLD)
-
-        if self.__direction == DIRECTION["NORTH"]: self.__win.addstr(u"^ ")
-        elif self.__direction == DIRECTION["SOUTH"]: self.__win.addstr(u"v ")
-        elif self.__direction == DIRECTION["EAST"]: self.__win.addstr(u"> ")
-        elif self.__direction == DIRECTION["WEST"]: self.__win.addstr(u"< ")
-
-        if has_colors():
-            self.__win.attroff(color_pair(COLORS["YELLOW"]))
-            self.__win.attroff(A_BOLD)
-        self.__win.refresh()
-        sleep(self.__step_delay)
-
-    def __error_shut_off(self, message):
-        if not self.__summary_mode:
-            self.__win.move(0, 0)
-            if has_colors():
-                self.__win.attron(color_pair(COLORS["RED"]))
-            self.__win.addstr(u"Error Shutoff! ({})".format(message))
-            self.__win.refresh()
-            self.__win.getch()
-            endwin()
-        else:
-            print("Error Shutoff! ({})".format(message), file=sys.stderr)
+    if __k.world.width > 30 or __k.world.height > 30:
+        print("The given world is greater than the max values of [{}x{}]".format(30, 30), file=sys.stderr)
         exit(1)
 
-    def __init(self):
-        if self.__summary_mode: return
+    if __k.direction == "S": __k.direction = DIRECTION["SOUTH"]
+    elif __k.direction == "W": __k.direction = DIRECTION["WEST"]
+    elif __k.direction == "E": __k.direction = DIRECTION["EAST"]
+    elif __k.direction == "N": __k.direction = DIRECTION["NORTH"]
+    else:
+        print("Error: Unknown Karel's direction\n", file=sys.stderr)
+        exit(1)
 
-        self.__win = initscr()
+    for i in range(1, len(world_content)):
+        if world_content[i] == '': continue
+        world_content[i] = world_content[i].split(' ')
+        block = world_content[i][0].upper()
+        if block == "W":
+            column = int(world_content[i][1]) * 2 - 2
+            row = int(world_content[i][2]) * 2 - 2
+
+            if column % 2 == 1 or row % 2 == 1:
+                print("Error: Wrong position", file=sys.stderr)
+                exit(1)
+
+            orientation = world_content[i][3].upper()
+            if orientation == "E": column += 1
+            elif orientation == "W": column -= 1
+            elif orientation == "N": row += 1
+            elif orientation == "S": row -= 1
+            else:
+                print("Error: Unknown wall orientation '" + orientation + "' on line " + str(i + 1) + " in world file.", file=sys.stderr)
+                exit(1)
+            __k.world.data[row][column] = BLOCK["WALL"]
+            if column % 2 == 1 and row % 2 == 0:
+                if row + 1 < __k.world.height:
+                    __k.world.data[row + 1][column] = BLOCK["WALL"]
+                if row - 1 >= 0:
+                    __k.world.data[row - 1][column] = BLOCK["WALL"]
+            else:
+                if column + 1 < __k.world.width:
+                    __k.world.data[row][column + 1] = BLOCK["WALL"]
+                if column - 1 >= 0:
+                    __k.world.data[row][column - 1] = BLOCK["WALL"]
+        elif block == "B":
+            column = int(world_content[i][1]) * 2 - 2
+            row = int(world_content[i][2]) * 2 - 2
+            count = int(world_content[i][3])
+            __k.world.data[row][column] = count
+        else:
+            print("Unknown block character " + block + " on line " + str(i + 1) + " in world file.")
+            exit(1)
+    __Init()
+    __k.last_command = "TURNON"
+    __DrawWorld()
+    __Render()
+
+    __k.is_running = True
+
+
+def __PrintBeeper(n):
+    if __k.summary_mode: return
+    if has_colors():
+        __k.win.attron(color_pair(COLORS["WHITE"]))
+        __k.win.attron(A_BOLD)
+    __k.win.addstr(u"{:^2}".format(n))
+
+    if has_colors():
+        __k.win.attroff(color_pair(COLORS["WHITE"]))
+        __k.win.attroff(A_BOLD)
+
+def __DrawWorld():
+    if __k.summary_mode: return
+    __k.win.move(4, 0)
+    __k.win.addstr(u"ST.+")
+    column = 0
+    while column <= __k.world.width * 2:
+        __k.win.addstr(u"-")
+        column += 1
+    __k.win.addstr(u"+\n")
+
+    row = __k.world.height - 1
+    while row >= 0:
+        if row % 2 == 0:
+            __k.win.addstr(u"{:2} |".format(row // 2 + 1))
+        else:
+            __k.win.addstr(u"   |")
+
+        if __k.world.data[row][0] == BLOCK["WALL"]:
+            __k.win.addstr(u"-")
+        else:
+            __k.win.addstr(u" ")
+
+        for column in range(__k.world.width):
+            block = __k.world.data[row][column]
+            left = BLOCK["WALL"]
+            right = BLOCK["WALL"]
+            up = 0
+            down = 0
+            if column - 1 >= 0: left = __k.world.data[row][column - 1]
+            if column + 1 < __k.world.width: right = __k.world.data[row][column + 1]
+            if row + 1 < __k.world.height: up = __k.world.data[row + 1][column]
+            if row - 1 >= 0: down = __k.world.data[row - 1][column]
+
+            if column % 2 == 0 and row % 2 == 0:
+                if block > 0:
+                    __PrintBeeper(block)
+                else:
+                    __k.win.addstr(u'. ')
+                column += 1
+                continue
+
+            if block == BLOCK["WALL"]:
+                if column % 2 == 1 and row % 2 == 0:
+                    __k.win.addstr(u"| ")
+                    continue
+
+                wall_above = (up == BLOCK["WALL"])
+                wall_below = (down == BLOCK["WALL"])
+                wall_on_left = (left == BLOCK["WALL"])
+                wall_on_right = (right == BLOCK["WALL"])
+
+                if wall_above and wall_below and (not wall_on_left) and (not wall_on_right):
+                    __k.win.addstr(u"| ")
+                    continue
+
+                if wall_on_left and (not wall_on_right) and (not wall_above) and (not wall_below):
+                    __k.win.addstr(u"- ")
+                    continue
+
+                if (not wall_above) and (not wall_below):
+                    __k.win.addstr(u"--")
+                    continue
+
+                if (not wall_on_left) and wall_on_right and (not wall_above) and (not wall_below):
+                    __k.win.addstr(u" -")
+                    continue
+
+                if wall_on_right and ( (wall_above or wall_below) or (wall_above and wall_on_left) or (wall_above and wall_below) or (wall_on_left and wall_below) ):
+                    __k.win.addstr(u"+-")
+                    continue
+
+                if (not wall_on_left) and (not wall_on_right) and (((not wall_above) and wall_below) or ((not wall_below) and wall_above)):
+                    __k.win.addstr(u"| ")
+                    continue
+
+                if wall_on_left and (not wall_on_right) and (wall_above or wall_below):
+                    __k.win.addstr(u"+ ")
+                    continue
+
+                __k.win.addstr(u"  ")
+            else:
+                __k.win.addstr(u"  ")
+
+        __k.win.addstr(u"|\n")
+        row -= 1
+
+    __k.win.addstr(u"   +")
+    column = 0
+    while column <= __k.world.width * 2:
+        __k.win.addstr(u"-")
+        column += 1
+    __k.win.addstr(u"+\n     ")
+
+    column = 0
+    while column < __k.world.width:
+        if column % 2 == 0:
+            __k.win.addstr(u"{:>2}".format(column // 2 + 1))
+        else:
+            __k.win.addstr(u"  ")
+        column += 1
+    __k.win.addstr(u"  AVE.\n")
+    __k.win.refresh()
+
+def __Update(dx, dy):
+    if not (dx == 0 and dy == 0):
+        block = __k.world.data[__k.y - 2 * dy][__k.x - 2 * dx]
+
+        if not __k.summary_mode:
+            __k.win.move(__k.world.height - (__k.y - 2 * dy) + 4, 2 * (__k.x - 2 * dx) + 5)
+            if block > 0:
+                __PrintBeeper(block)
+            else:
+                __k.win.addstr(u". ")
+
+def __Render():
+    if __k.summary_mode: return
+    direction = None
+    __k.win.move(1, 0)
+
+    if __k.direction == DIRECTION["NORTH"]: direction = "NORTH"
+    elif __k.direction == DIRECTION["SOUTH"]: direction = "SOUTH"
+    elif __k.direction == DIRECTION["WEST"]: direction = "WEST"
+    elif __k.direction == DIRECTION["EAST"]: direction = "EAST"
+    else: direction = "UNKNOWN"
+
+    __k.win.addstr(u" {:>3} {}\n".format(__k.steps, __k.last_command))
+    __k.win.addstr(u" CORNER  FACING  BEEP-BAG  BEEP-CORNER\n")
+    __k.win.addstr(u" ({}, {})   {:>5}     {:2}        {:2}".format((__k.x + 2) // 2, (__k.y + 2) // 2, direction, __k.beepers, __k.world.data[__k.y][__k.x]))
+
+    __k.win.move(__k.world.height - __k.y + 4, 2 * __k.x + 5)
+
+    if has_colors():
+        __k.win.attron(color_pair(COLORS["YELLOW"]))
+        __k.win.attron(A_BOLD)
+
+    if __k.direction == DIRECTION["NORTH"]: __k.win.addstr(u"^ ")
+    elif __k.direction == DIRECTION["SOUTH"]: __k.win.addstr(u"v ")
+    elif __k.direction == DIRECTION["EAST"]: __k.win.addstr(u"> ")
+    elif __k.direction == DIRECTION["WEST"]: __k.win.addstr(u"< ")
+
+    if has_colors():
+        __k.win.attroff(color_pair(COLORS["YELLOW"]))
+        __k.win.attroff(A_BOLD)
+    __k.win.refresh()
+    sleep(__k.step_delay)
+
+def __ErrorShutOff(message):
+    if not __k.summary_mode:
+        __k.win.move(0, 0)
         if has_colors():
-            start_color()
-            init_pair(COLORS["RED"], COLOR_RED, COLOR_BLACK)
-            init_pair(COLORS["YELLOW"], COLOR_YELLOW, COLOR_BLACK)
-            init_pair(COLORS["WHITE"], COLOR_WHITE, COLOR_BLACK)
-        curs_set(0)
-
-    def __deinit(self):
-        if self.__summary_mode: return
-
-        self.__win.move(0, 0)
-        if has_colors():
-            self.__win.attron(color_pair(COLORS["YELLOW"]))
-        self.__win.addstr(u"Press any key to quit...")
-        self.__win.refresh()
-        self.__win.getch()
+            __k.win.attron(color_pair(COLORS["RED"]))
+        __k.win.addstr(u"Error Shutoff! ({})".format(message))
+        __k.win.refresh()
+        __k.win.getch()
         endwin()
+    else:
+        print("Error Shutoff! ({})".format(message), file=sys.stderr)
+    exit(1)
+
+def __Init():
+    if __k.summary_mode: return
+
+    __k.win = initscr()
+    if has_colors():
+        start_color()
+        init_pair(COLORS["RED"], COLOR_RED, COLOR_BLACK)
+        init_pair(COLORS["YELLOW"], COLOR_YELLOW, COLOR_BLACK)
+        init_pair(COLORS["WHITE"], COLOR_WHITE, COLOR_BLACK)
+    curs_set(0)
+
+def __DeInit():
+    if __k.summary_mode: return
+
+    __k.win.move(0, 0)
+    if has_colors():
+        __k.win.attron(color_pair(COLORS["YELLOW"]))
+    __k.win.addstr(u"Press any key to quit...")
+    __k.win.refresh()
+    __k.win.getch()
+    endwin()
 
 
-    def __check_karel_state(self):
-        if not self.__is_running:
-            self.__error_shut_off("Karel is not turned on")
+def __CheckKarelState():
+    if not __k.is_running:
+        __ErrorShutOff("Karel is not turned on")
 
-    def beepers_in_bag(self):
-        self.__check_karel_state()
-        return self.__beepers > 0
+def BeepersInBag():
+    __CheckKarelState()
+    return __k.beepers > 0
 
-    def no_beepers_in_bag(self):
-        return not self.beepers_in_bag()
+def NoBeepersInBag():
+    return not BeepersInBag()
 
-    def front_is_clear(self):
-        self.__check_karel_state()
+def FrontIsClear():
+    __CheckKarelState()
 
-        if self.__direction == DIRECTION["NORTH"]:
-            if self.__y + 1 >= self.__world.height or self.__world.data[self.__y + 1][self.__x] == BLOCK["WALL"]:
-                return False
-        elif self.__direction == DIRECTION["SOUTH"]:
-            if self.__y - 1 < 1 or self.__world.data[self.__y - 1][self.__x] == BLOCK["WALL"]:
-                return False
-        elif self.__direction == DIRECTION["WEST"]:
-            if self.__x - 1 < 1 or self.__world.data[self.__y][self.__x - 1] == BLOCK["WALL"]:
-                return False
-        elif self.__direction == DIRECTION["EAST"]:
-            if self.__x + 1 >= self.__world.width or self.__world.data[self.__y][self.__x + 1] == BLOCK["WALL"]:
-                return False
-        return True
+    if __k.direction == DIRECTION["NORTH"]:
+        if __k.y + 1 >= __k.world.height or __k.world.data[__k.y + 1][__k.x] == BLOCK["WALL"]:
+            return False
+    elif __k.direction == DIRECTION["SOUTH"]:
+        if __k.y - 1 < 1 or __k.world.data[__k.y - 1][__k.x] == BLOCK["WALL"]:
+            return False
+    elif __k.direction == DIRECTION["WEST"]:
+        if __k.x - 1 < 1 or __k.world.data[__k.y][__k.x - 1] == BLOCK["WALL"]:
+            return False
+    elif __k.direction == DIRECTION["EAST"]:
+        if __k.x + 1 >= __k.world.width or __k.world.data[__k.y][__k.x + 1] == BLOCK["WALL"]:
+            return False
+    return True
 
-    def front_is_blocked(self):
-        return not self.front_is_clear()
+def FrontIsBlocked():
+    return not FrontIsClear()
 
-    def left_is_clear(self):
-        self.__check_karel_state()
+def LeftIsClear():
+    __CheckKarelState()
 
-        original_direction = self.__direction
-        self.__direction += 90
-        if self.__direction > 270:
-            self.__direction = DIRECTION["EAST"]
+    original_direction = __k.direction
+    __k.direction += 90
+    if __k.direction > 270:
+        __k.direction = DIRECTION["EAST"]
 
-        is_clear = self.front_is_clear()
-        self.__direction = original_direction
+    is_clear = FrontIsClear()
+    __k.direction = original_direction
 
-        return is_clear
+    return is_clear
 
-    def left_is_blocked(self):
-        return not self.left_is_clear()
+def LeftIsBlocked():
+    return not LeftIsClear()
 
-    def right_is_clear(self):
-        self.__check_karel_state()
+def RightIsClear():
+    __CheckKarelState()
 
-        original_direction = self.__direction
-        self.__direction -= 90
-        if self.__direction < 0:
-            self.__direction = DIRECTION["SOUTH"]
+    original_direction = __k.direction
+    __k.direction -= 90
+    if __k.direction < 0:
+        __k.direction = DIRECTION["SOUTH"]
 
-        is_clear = self.front_is_clear()
-        self.__direction = original_direction
+    is_clear = FrontIsClear()
+    __k.direction = original_direction
 
-        return is_clear
+    return is_clear
 
-    def right_is_blocked(self):
-        return not self.right_is_clear()
+def RightIsBlocked():
+    return not RightIsClear()
 
-    def facing_north(self):
-        self.__check_karel_state()
-        return self.__direction == DIRECTION["NORTH"]
+def FacingNorth():
+    __CheckKarelState()
+    return __k.direction == DIRECTION["NORTH"]
 
-    def not_facing_north(self):
-        return not self.facing_north()
+def NotFacingNorth():
+    return not FacingNorth()
 
-    def facing_south(self):
-        self.__check_karel_state()
-        return self.__direction == DIRECTION["SOUTH"]
+def FacingSouth():
+    __CheckKarelState()
+    return __k.direction == DIRECTION["SOUTH"]
 
-    def not_facing_south(self):
-        return not self.facing_south()
+def NotFacingSouth():
+    return not FacingSouth()
 
-    def facing_east(self):
-        self.__check_karel_state()
-        return self.__direction == DIRECTION["EAST"]
+def FacingEast():
+    __CheckKarelState()
+    return __k.direction == DIRECTION["EAST"]
 
-    def not_facing_east(self):
-        return not self.facing_east()
+def NotFacingEast():
+    return not FacingEast()
 
-    def facing_west(self):
-        self.__check_karel_state()
-        return self.__direction == DIRECTION["WEST"]
+def FacingWest():
+    __CheckKarelState()
+    return __k.direction == DIRECTION["WEST"]
 
-    def not_facing_west(self):
-        return not self.facing_west()
+def NotFacingWest():
+    return not FacingWest()
 
-    def beepers_present(self):
-        self.__check_karel_state()
-        return self.__world.data[self.__y][self.__x] > 0
+def BeepersPresent():
+    __CheckKarelState()
+    return __k.world.data[__k.y][__k.x] > 0
 
-    def no_beepers_present(self):
-        return not self.beepers_present()
+def NoBeepersPresent():
+    return not BeepersPresent()
 
-    def movek(self):
-        self.__check_karel_state()
+def Move():
+    __CheckKarelState()
 
-        if self.front_is_clear():
-            if self.__direction == DIRECTION["NORTH"]:
-                self.__y += 2
-                self.__update(0, 1)
-            elif self.__direction == DIRECTION["SOUTH"]:
-                self.__y -= 2
-                self.__update(0, -1)
-            elif self.__direction == DIRECTION["WEST"]:
-                self.__x -= 2
-                self.__update(-1, 0)
-            elif self.__direction == DIRECTION["EAST"]:
-                self.__x += 2
-                self.__update(1, 0)
-            self.__steps += 1
-            self.__last_command = "MOVEK"
-            self.__render()
-        else:
-            self.__error_shut_off("Can't move this way")
+    if FrontIsClear():
+        if __k.direction == DIRECTION["NORTH"]:
+            __k.y += 2
+            __Update(0, 1)
+        elif __k.direction == DIRECTION["SOUTH"]:
+            __k.y -= 2
+            __Update(0, -1)
+        elif __k.direction == DIRECTION["WEST"]:
+            __k.x -= 2
+            __Update(-1, 0)
+        elif __k.direction == DIRECTION["EAST"]:
+            __k.x += 2
+            __Update(1, 0)
+        __k.steps += 1
+        __k.last_command = "MOVEK"
+        __Render()
+    else:
+        __ErrorShutOff("Can't move this way")
 
-    def turn_left(self):
-        self.__check_karel_state()
+def TurnLeft():
+    __CheckKarelState()
 
-        self.__direction += 90
-        if self.__direction > 270:
-            self.__direction = DIRECTION["EAST"]
-        self.__steps += 1
-        self.__last_command = "TURNLEFT"
-        self.__update(0, 0)
-        self.__render()
+    __k.direction += 90
+    if __k.direction > 270:
+        __k.direction = DIRECTION["EAST"]
+    __k.steps += 1
+    __k.last_command = "TURNLEFT"
+    __Update(0, 0)
+    __Render()
 
-    def turn_off(self):
-        self.__last_command = "TURNOFF"
-        self.__render()
-        self.__deinit()
-        exit(0)
+def TurnOff():
+    __k.last_command = "TURNOFF"
+    __Render()
+    __DeInit()
+    exit(0)
 
-    def put_beeper(self):
-        self.__check_karel_state()
+def PutBeeper():
+    __CheckKarelState()
 
-        if self.__beepers > 0:
-            self.__world.data[self.__y][self.__x] += 1
-            self.__beepers -= 1
-            self.__steps += 1
-            self.__last_command = "PUTBEEPER"
-            self.__render()
-        else:
-            self.__error_shut_off("Karel has no beeper to put at the corner")
+    if __k.beepers > 0:
+        __k.world.data[__k.y][__k.x] += 1
+        __k.beepers -= 1
+        __k.steps += 1
+        __k.last_command = "PUTBEEPER"
+        __Render()
+    else:
+        __ErrorShutOff("Karel has no beeper to put at the corner")
 
 
-    def pick_beeper(self):
-        self.__check_karel_state()
+def PickBeeper():
+    __CheckKarelState()
 
-        if self.__world.data[self.__y][self.__x] > 0:
-            self.__world.data[self.__y][self.__x] -= 1
-            self.__beepers += 1
-            self.__steps += 1
-            self.__last_command = "PICKBEEPER"
-            self.__render()
-        else:
-            self.__error_shut_off("There is no beeper at the corner")
+    if __k.world.data[__k.y][__k.x] > 0:
+        __k.world.data[__k.y][__k.x] -= 1
+        __k.beepers += 1
+        __k.steps += 1
+        __k.last_command = "PICKBEEPER"
+        __Render()
+    else:
+        __ErrorShutOff("There is no beeper at the corner")
 
-    def set_step_delay(self, delay):
-        self.__step_delay = delay
+def SetStepDelay(delay):
+    __k.step_delay = delay
 
-    def get_step_delay(self):
-        return self.__step_delay
+def GetStepDelay():
+    return __k.step_delay
