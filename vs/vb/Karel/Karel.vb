@@ -261,7 +261,7 @@ Public Module Karel
 
         Console.Write(" {0,3} {1,-10}" + vbLf, Steps, LastCommand)
         Console.Write("  CORNER    FACING  BEEP-BAG  BEEP-CORNER" + vbLf)
-        Console.Write" ( {0,2},{1,2} )  {2,5}       {3,-3}        {4,-3}" + vbLf, (X + 2) / 2, (Y + 2) / 2, DirectionOut, Beepers, World.Data(Y, X))
+        Console.Write(" ( {0,2},{1,2} )  {2,5}       {3,-3}        {4,-3}" + vbLf, (X + 2) / 2, (Y + 2) / 2, DirectionOut, Beepers, World.Data(Y, X))
 
         Console.SetCursorPosition(2 * X + 5, World.Height - Y + 4)
         Dim DefaultColor As ConsoleColor = Console.ForegroundColor
