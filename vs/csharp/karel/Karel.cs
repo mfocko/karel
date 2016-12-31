@@ -318,7 +318,7 @@ namespace sk.fockomatej.karel
 
             Console.Write(" {0,3} {1,-10}\n", Steps, LastCommand);
             Console.Write(" CORNER  FACING  BEEP-BAG  BEEP-CORNER\n");
-            Console.Write(" ({0}, {1})   {2,5}     {3,-2}        {4,-2}\n", (X + 2) / 2, (Y + 2) / 2, DirectionOut, Beepers, World.Data[Y, X]);
+            Console.Write(" ({0,2}, {1,2})   {2,5}     {3,-2}        {4,-2}\n", (X + 2) / 2, (Y + 2) / 2, DirectionOut, Beepers, World.Data[Y, X]);
 
             Console.SetCursorPosition(2 * X + 5, World.Height - Y + 4);
             ConsoleColor DefaultColor = Console.ForegroundColor;
@@ -372,8 +372,10 @@ namespace sk.fockomatej.karel
             DefaultBackground = Console.BackgroundColor;
             Console.BackgroundColor = ConsoleColor.Black;
             Console.CursorVisible = false;
-            Console.SetWindowSize(2 * World.Width + 12, World.Height + 8);
-            Console.SetBufferSize(2 * World.Width + 12, World.Height + 8);
+            int Width = 2 * World.Width + 12;
+            if (Width < 38) Width = 38;
+            Console.SetWindowSize(Width, World.Height + 8);
+            Console.SetBufferSize(Width, World.Height + 8);
         }
 
         private static void DeInit()
