@@ -309,7 +309,7 @@ Public Module Karel
         Console.BackgroundColor = ConsoleColor.Black
         Console.CursorVisible = False
         Dim Width As Integer = 2 * World.Width + 12
-        If Width < 38 Then Width = 38
+        If Width < 39 Then Width = 39
         Console.SetWindowSize(Width, World.Height + 8)
         Console.SetBufferSize(Width, World.Height + 8)
     End Sub

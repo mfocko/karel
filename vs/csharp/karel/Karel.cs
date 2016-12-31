@@ -373,7 +373,7 @@ namespace sk.fockomatej.karel
             Console.BackgroundColor = ConsoleColor.Black;
             Console.CursorVisible = false;
             int Width = 2 * World.Width + 12;
-            if (Width < 38) Width = 38;
+            if (Width < 39) Width = 39;
             Console.SetWindowSize(Width, World.Height + 8);
             Console.SetBufferSize(Width, World.Height + 8);
         }
