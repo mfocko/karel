@@ -281,15 +281,13 @@ Public Module Karel
     End Sub
 
     Private Sub Update(ByVal dx, ByVal dy)
-        If Not (dx = 0 AndAlso dy = 0) Then
-            Dim ActualBlock As Integer = World.Data(Y - 2 * dy, X - 2 * dx)
+        Dim ActualBlock As Integer = World.Data(Y - 2 * dy, X - 2 * dx)
 
-            Console.SetCursorPosition(2 * (X - 2 * dx) + 5, World.Height - (Y - 2 * dy) + 4)
-            If ActualBlock > 0 Then
-                PrintBeeper(ActualBlock)
-            Else
-                Console.Write(". ")
-            End If
+        Console.SetCursorPosition(2 * (X - 2 * dx) + 5, World.Height - (Y - 2 * dy) + 4)
+        If ActualBlock > 0 Then
+            PrintBeeper(ActualBlock)
+        Else
+            Console.Write(". ")
         End If
     End Sub
 
@@ -479,7 +477,6 @@ Public Module Karel
         Steps += 1
         LastCommand = Commands(1)
 
-        Update(0, 0)
         Render()
     End Sub
 

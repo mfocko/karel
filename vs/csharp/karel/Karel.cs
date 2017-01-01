@@ -345,14 +345,11 @@ namespace sk.fockomatej.karel
 
         private static void Update(int dx, int dy)
         {
-            if (!(dx == 0 && dy == 0))
-            {
-                int Block = World.Data[Y - 2 * dy, X - 2 * dx];
+            int Block = World.Data[Y - 2 * dy, X - 2 * dx];
 
-                Console.SetCursorPosition(2 * (X - 2 * dx) + 5, World.Height - (Y - 2 * dy) + 4);
-                if (Block > 0) PrintBeeper(Block);
-                else Console.Write(". ");
-            }
+            Console.SetCursorPosition(2 * (X - 2 * dx) + 5, World.Height - (Y - 2 * dy) + 4);
+            if (Block > 0) PrintBeeper(Block);
+            else Console.Write(". ");
         }
 
         private static void ErrorShutOff(string message)
@@ -580,7 +577,6 @@ namespace sk.fockomatej.karel
             Steps++;
             LastCommand = Commands[1];
 
-            Update(0, 0);
             Render();
         }
 

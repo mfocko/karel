@@ -236,15 +236,14 @@ def __DrawWorld():
     __k.win.refresh()
 
 def __Update(dx, dy):
-    if not (dx == 0 and dy == 0):
-        block = __k.world.data[__k.y - 2 * dy][__k.x - 2 * dx]
+    block = __k.world.data[__k.y - 2 * dy][__k.x - 2 * dx]
 
-        if not __k.summary_mode:
-            __k.win.move(__k.world.height - (__k.y - 2 * dy) + 4, 2 * (__k.x - 2 * dx) + 5)
-            if block > 0:
-                __PrintBeeper(block)
-            else:
-                __k.win.addstr(u". ")
+    if not __k.summary_mode:
+        __k.win.move(__k.world.height - (__k.y - 2 * dy) + 4, 2 * (__k.x - 2 * dx) + 5)
+        if block > 0:
+            __PrintBeeper(block)
+        else:
+            __k.win.addstr(u". ")
 
 def __Render():
     if __k.summary_mode: return
@@ -442,11 +441,11 @@ def TurnLeft():
         __k.direction = DIRECTION["EAST"]
     __k.steps += 1
     __k.last_command = "TURNLEFT"
-    __Update(0, 0)
     __Render()
 
 def TurnOff():
     __k.last_command = "TURNOFF"
+    __k.is_running = False
     __Render()
     __DeInit()
     exit(0)
