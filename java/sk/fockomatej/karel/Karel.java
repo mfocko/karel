@@ -324,6 +324,7 @@ public abstract class Karel extends Application {
 		term.setForeground(Terminal.Foreground.RED);
 		term.write(String.format("Error Shutoff! (%s)", message));
 		isRunning = false;
+		term.close();
 	}
 
 	private void deInit() {
@@ -331,6 +332,7 @@ public abstract class Karel extends Application {
 		term.setForeground(Terminal.Foreground.YELLOW);
 		term.write("Close window to quit...");
 		isRunning = false;
+		term.close();
 	}
 
 	private void checkKarelState() {
@@ -360,7 +362,7 @@ public abstract class Karel extends Application {
 				if (x - 1 < 1 || world.data[y][x - 1] == Block.WALL.toInt()) return false;
 				break;
 			case 0: // EAST
-				if (x + 1 >= world.height || world.data[y][x + 1] == Block.WALL.toInt()) return false;
+				if (x + 1 >= world.width || world.data[y][x + 1] == Block.WALL.toInt()) return false;
 				break;
 		}
 		return true;
@@ -543,6 +545,10 @@ public abstract class Karel extends Application {
 		if (!isRunning) {
 			Platform.exit();
 		}
+	}
+
+	public static void main(String[] args) {
+		launch(args);
 	}
 
 	@Override

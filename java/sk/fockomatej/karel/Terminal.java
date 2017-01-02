@@ -24,6 +24,7 @@ public class Terminal extends Application {
 	private double fontHeight, fontWidth;
 	private static final String fontFamily = "monospace";
 	private Karel k;
+	private boolean running;
 
 	public Terminal(Karel obj) {
 		super();
@@ -37,6 +38,7 @@ public class Terminal extends Application {
 		x = 0;
 		y = fontHeight;
 		row = column = 0;
+		running = true;
 	}
 
 	@Override
@@ -61,6 +63,7 @@ public class Terminal extends Application {
 	}
 
 	public void setForeground(Foreground color) {
+		if (!running) return;
 		switch (color) {
 			case DEFAULT:
 				gr.setStroke(Color.GAINSBORO);
@@ -78,6 +81,7 @@ public class Terminal extends Application {
 	}
 
 	public void write(String text) {
+		if (!running) return;
 		if (text.length() == 0) return;
 		int newLine = text.indexOf('\n');
 		if (newLine == -1) {
@@ -111,9 +115,14 @@ public class Terminal extends Application {
 	}
 
 	public void move(int column, int row) {
+		if (!running) return;
 		this.column = column;
 		this.row = row;
 		y = fontHeight * (row + 1);
 		x = fontWidth * column;
+	}
+
+	public void close() {
+		running = false;
 	}
 }
