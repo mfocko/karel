@@ -23,11 +23,12 @@ class Karel:
 
 BLOCK = {"CLEAR": 0, "WALL": -1}
 DIRECTION = {"EAST": 0, "NORTH": 90, "WEST": 180, "SOUTH": 270}
-COLORS = {"RED": 1, "YELLOW": 2, "WHITE": 3}
 
-__k = Karel()
+__k = None
 
-def turnOn(filename = None):
+def turnOn(filename=None, scale=1):
+    global __k
+    __k = Karel()
     world_content = None
     try:
         world_file = open(filename)
@@ -108,7 +109,7 @@ def turnOn(filename = None):
         else:
             print("Unknown block character " + block + " on line " + str(i + 1) + " in world file.")
             exit(1)
-    __init()
+    __init(scale)
     __k.last_command = "TURNON"
     __drawWorld()
     __render()
@@ -215,10 +216,10 @@ def __errorShutOff(message):
         print(f"Error Shutoff! ({message})", file=sys.stderr)
     exit(1)
 
-def __init():
+def __init(scale):
     if __k.summary_mode: return
 
-    __k.win['size'] = 40
+    __k.win['size'] = int(32 * scale)
 
     __k.win['steps'] = tk.Label(text=__k.steps, anchor='e')
     __k.win['steps'].grid(row=0, column=0, sticky='e')
@@ -245,7 +246,7 @@ def __init():
                              background='black')
     __k.win['c'].grid(column=0, row=3, columnspan=4)
 
-    __k.win['font'] = 'monospace 12'
+    __k.win['font'] = f'monospace {int(12 * scale)}'
 
 def __deinit():
     if __k.summary_mode: return
